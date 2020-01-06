@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+
+<index version="1.0">
+  <indexitem text="Apache 2.0" target="apache20" />
+  <indexitem text="BSD 2-clause" target="bsd2" />
+  <indexitem text="Unlicense" target="unlicense" />
+</index>

@@ -1,0 +1,6 @@
+/.settings
+/.checkstyle
+/.eclipse-pmd
+/bin
+/build
+/dist/jar

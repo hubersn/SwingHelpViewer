@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+
+<toc version="1.0">
+  <tocitem target="top" text="Help for ExampleApp"/>
+  <tocitem target="licenseoverview" text="Open Source License Overview">
+    <tocitem target="apache20" text="Apache License 2.0"/>
+    <tocitem target="bsd2" text="2-clause BSD license"/>
+    <tocitem target="unlicense" text="The Unlicense"/>
+  </tocitem>
+</toc>

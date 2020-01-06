@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+
+<map version="1.0">
+  <mapID target="top" url="index.html"/>
+  <mapID target="licenseoverview" url="licenses.html"/>
+  <mapID target="unlicense" url="unlicense.html"/>
+  <mapID target="apache20" url="apache20.html"/>
+  <mapID target="bsd2" url="bsd2.html"/>
+</map>
