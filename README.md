@@ -16,7 +16,7 @@ The repo is a full Eclipse project, but it should be trivial to use the code in 
 
 Take com.hubersn.ui.swing.helpview.HelpViewer as an example of a simple frame containing the HelpView along with the standard Toolbar. Please do not forget to admire the beautiful toolbar button and tab icons - I call it "monoclean design". Just joking.
 
-Have a look at ResourceManager to find out how you cam provide your own localization and icons. Probably the only interesting component is a JTree extension called FilterableTree which is used to filter the tree views when searching. XML parsing is done "by hand" in XMLDocument - have a look to remind yourself what we did before the really cool XML libs were created.
+Have a look at ResourceManager to find out how you can provide your own localization and icons. Probably the only interesting component is a JTree extension called FilterableTree which is used to filter the tree views when searching. XML parsing is done "by hand" in XMLDocument - have a look to remind yourself what we did before the really cool XML libs were created.
 
 To create help content, why not investigate something like DocBook which can export JavaHelp format.
 
