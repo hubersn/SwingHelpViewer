@@ -38,14 +38,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Maps helpIDs to true target URLs.
+ * Maps helpIDs ("target" attribute in a mapID tag) to true target URLs ("url" attribute in a mapID tag).
  */
 public class HelpMapper {
 
   private final Map<String, String> helpMap = new HashMap<>();
 
   /**
-   * Creates a new instance of HelpMapper.
+   * Creates a new instance of HelpMapper based on given input stream with the XML .jhm source.
    *
    * @param helpMapInputStream XML map-target source input stream.
    * @throws Exception on error.
@@ -58,8 +58,23 @@ public class HelpMapper {
     }
   }
 
+  /**
+   * Returns the URL as a string for the given target (help ID).
+   * 
+   * @param target help ID.
+   * @return URL representing given help ID, or null if it does not exist.
+   */
   public String getURL(final String target) {
     return this.helpMap.get(target);
+  }
+
+  /**
+   * Returns all target keys for this help map.
+   * 
+   * @return all target keys.
+   */
+  public String[] getTargets() {
+    return this.helpMap.keySet().toArray(new String[0]);
   }
 
 }

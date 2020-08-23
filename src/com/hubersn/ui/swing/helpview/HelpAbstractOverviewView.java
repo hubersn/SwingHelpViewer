@@ -48,6 +48,8 @@ import javax.swing.JTree;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreePath;
 
@@ -66,29 +68,61 @@ public abstract class HelpAbstractOverviewView extends JPanel {
 
   private JTextField searchField;
 
+  /**
+   * Creates the panel with a BorderLayout and sets the activateSearch property.
+   * 
+   * @param activateSearch show search textfield?
+   */
   public HelpAbstractOverviewView(final boolean activateSearch) {
     super(new BorderLayout());
     this.activateSearch = activateSearch;
   }
 
+  /**
+   * Returns the tree, the main part of this view.
+   * 
+   * @return tree view.
+   */
   protected FilterableTree getTree() {
     return this.tree;
   }
 
   /**
-   * Returns the icon associated with this view, e.g. to be placed in a tab - note
-   * that null is a valid return value that must be catered for!
+   * Clears the tree model by removing all nodes from root node.
+   */
+  protected void clear() {
+    DefaultTreeModel treeModel = (DefaultTreeModel) this.tree.getModel();
+    DefaultMutableTreeNode root = (DefaultMutableTreeNode) getTree().getModel().getRoot();
+    while (root.getChildCount() > 0) {
+      treeModel.removeNodeFromParent((MutableTreeNode) root.getChildAt(0));
+    }
+  }
+
+  /**
+   * Returns the icon associated with this view, e.g. to be placed in a tab - note that null is a valid return value that must be catered
+   * for!
    *
    * @return icon associated with this view, or null if none is available.
    */
   public abstract ImageIcon getIcon();
 
+  /**
+   * Adds a selection listener to the tree.
+   * 
+   * @param tsl selection listener.
+   */
   public void addSelectionListener(final TreeSelectionListener tsl) {
     getTree().addTreeSelectionListener(tsl);
   }
 
+  /**
+   * Tries to select the node that represents the given url.
+   * 
+   * @param hs helpset.
+   * @param url url.
+   */
   public void tryToSelectURL(final HelpSet hs, final URL url) {
-    HelpOverviewNode matchingNode = getMatchingNode(hs, url, (HelpOverviewNode)getTree().getModel().getRoot());
+    HelpOverviewNode matchingNode = getMatchingNode(hs, url, (HelpOverviewNode) getTree().getModel().getRoot());
     if (matchingNode != null) {
       final TreePath tp = new TreePath(matchingNode.getPath());
       getTree().setSelectionPath(tp);
@@ -102,14 +136,14 @@ public abstract class HelpAbstractOverviewView extends JPanel {
     }
     // checking direct hierarchy
     for (int i = 0; i < root.getChildCount(); i++) {
-      HelpOverviewNode node = (HelpOverviewNode)root.getChildAt(i);
+      HelpOverviewNode node = (HelpOverviewNode) root.getChildAt(i);
       if (matches(hs, url, node)) {
         return node;
       }
     }
     // recursing...
     for (int i = 0; i < root.getChildCount(); i++) {
-      HelpOverviewNode node = (HelpOverviewNode)root.getChildAt(i);
+      HelpOverviewNode node = (HelpOverviewNode) root.getChildAt(i);
       if (node.getChildCount() > 0) {
         HelpOverviewNode matchingNode = getMatchingNode(hs, url, node);
         if (matchingNode != null) {
@@ -121,19 +155,22 @@ public abstract class HelpAbstractOverviewView extends JPanel {
   }
 
   private static boolean matches(final HelpSet hs, final URL url, final HelpOverviewNode node) {
-    if (url.toExternalForm().indexOf(node.target) > 0) {
+    if (url.toExternalForm().indexOf(node.target) >= 0) {
       return true;
     }
     // check if mapped id would work...
     String mappedTarget = hs.getMappedHelpURLString(node.target);
-    if (mappedTarget != null) {
-      if (url.toExternalForm().indexOf(mappedTarget) > 0) {
-        return true;
-      }
+    if (mappedTarget != null && url.toExternalForm().indexOf(mappedTarget) >= 0) {
+      return true;
     }
     return false;
   }
 
+  /**
+   * Extension point to create the view based on the given XML document.
+   * 
+   * @param xmlDoc XML document.
+   */
   public abstract void createView(final XMLDocument xmlDoc);
 
   /**
@@ -167,6 +204,11 @@ public abstract class HelpAbstractOverviewView extends JPanel {
     }
   }
 
+  /**
+   * Starts the search for the given text.
+   * 
+   * @param searchText text to search for.
+   */
   public void doSearch(final String searchText) {
     getTree().filterTree(searchText, false, false);
   }
@@ -191,7 +233,7 @@ public abstract class HelpAbstractOverviewView extends JPanel {
     getTree().expandRow(getTree().getRowForPath(treePath));
     if (treeNodeToExpand.getChildCount() > 0) {
       for (int i = 0; i < treeNodeToExpand.getChildCount(); i++) {
-        DefaultMutableTreeNode node = (DefaultMutableTreeNode)treeNodeToExpand.getChildAt(i);
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) treeNodeToExpand.getChildAt(i);
         expandTreeNode(node);
       }
     }
@@ -213,7 +255,6 @@ public abstract class HelpAbstractOverviewView extends JPanel {
       createNodes(tocItem.children, newNode);
     }
   }
-
 
   private static HelpOverviewNode createNode(final XMLDocument.XMLTag tocItem) {
     return new HelpOverviewNode(tocItem.getAttribute("target"), tocItem.getAttribute("text"));

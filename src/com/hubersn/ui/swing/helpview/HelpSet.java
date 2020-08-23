@@ -83,26 +83,57 @@ public class HelpSet {
     }
   }
 
+  /**
+   * Returns the list of views defined in this help set.
+   * 
+   * @return list of views.
+   */
   public List<ViewConfig> getViews() {
     return Collections.unmodifiableList(this.views);
   }
 
+  /**
+   * Returns the defined title of this help set.
+   * 
+   * @return help set title.
+   */
   public String getTitle() {
     return this.title;
   }
 
+  /**
+   * Returns the title that should be used for the frame showing this help set content.
+   * 
+   * @return frame title.
+   */
   public String getFrameTitle() {
     return getTitle();
   }
 
+  /**
+   * Returns the URL that represents the first page to be shown for this help set.
+   * 
+   * @return home URL.
+   */
   public URL getHelpHomeURL() {
     return getHelpURL(this.helpMap.getURL(this.homeID));
   }
 
+  /**
+   * Returns the last reference that was asked for via getHelpURL.
+   * 
+   * @return last reference asked for via getHelpURL.
+   */
   public String getLastRef() {
     return this.lastRef;
   }
 
+  /**
+   * Translates the given name into an URL that is showable in the content view.
+   * 
+   * @param name name.
+   * @return URL representing the name.
+   */
   public URL getHelpURL(final String name) {
     this.lastRef = "";
     URL returnURL = null;
@@ -137,6 +168,10 @@ public class HelpSet {
 
   public InputStream getHelpInputStream(final String name) {
     return HelpSet.class.getResourceAsStream(this.rootPath + "/" + name);
+  }
+
+  public HelpMapper getHelpMapper() {
+    return this.helpMap;
   }
 
   public static class ViewConfig {

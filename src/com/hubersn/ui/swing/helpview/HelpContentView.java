@@ -33,6 +33,7 @@ For more information, please refer to <http://unlicense.org/>
 package com.hubersn.ui.swing.helpview;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -52,7 +53,14 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkEvent.EventType;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.text.AbstractDocument;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Document;
+import javax.swing.text.Element;
+import javax.swing.text.Highlighter;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.html.HTML;
+import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
 
 /**
@@ -62,6 +70,7 @@ public class HelpContentView extends JPanel {
 
   private static final long serialVersionUID = 1L;
 
+  /** Property name to signal the change of the shown URL. */
   public static final String PAGE_URL_CHANGED_PROPERTY = "HELP_CONTENT_VIEW_PAGE_URL_CHANGED_PROPERTY";
 
   private static final String HTML_MIME_TYPE = "text/html";
@@ -203,8 +212,66 @@ public class HelpContentView extends JPanel {
     enableNavigationActions();
   }
 
+  /**
+   * Returns the plain text (i.e. without HTML tags) from this content view.
+   * 
+   * @return plain text.
+   */
+  public String getPlainText() {
+    try {
+      return this.contentView.getText(0, this.contentView.getDocument().getLength());
+    } catch (BadLocationException ex) {
+      // TODO Auto-generated catch block
+      ex.printStackTrace();
+    }
+    return "";
+  }
+
+  /**
+   * Remove possibly existing highlights in this view.
+   */
+  public void clearHighlights() {
+    this.contentView.getHighlighter().removeAllHighlights();
+  }
+
+  /**
+   * Add a highlight at given start offset with given length and given colour.
+   * 
+   * @param startOffset start offset for highlight.
+   * @param length length for highlight.
+   * @param highlightColour colour for highlight.
+   */
+  public void addHighlight(final int startOffset, final int length, final Color highlightColour) {
+    final Highlighter highlighter = this.contentView.getHighlighter();
+    final DefaultHighlighter.DefaultHighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(highlightColour);
+    try {
+      highlighter.addHighlight(startOffset, startOffset + length, painter);
+    } catch (BadLocationException ex) {
+      // TODO Auto-generated catch block
+      ex.printStackTrace();
+    }
+  }
+
+  /**
+   * Returns the title of this content view, or the empty string if the title is undefined.
+   * 
+   * @return title of this content view, or empty string.
+   */
+  public String getTitle() {
+    Document doc = this.contentView.getDocument();
+    if (doc instanceof HTMLDocument) {
+      HTMLDocument hdoc = (HTMLDocument)doc;
+      Object title = hdoc.getProperty(Document.TitleProperty);
+      if (title != null) {
+        return title.toString();
+      }
+    }
+    return "";
+  }
+
   private void setPageInternal(final URL url) throws IOException {
     if (url != null) {
+      this.contentView.getHighlighter().removeAllHighlights();
       this.contentView.setPage(url);
       this.pcs.firePropertyChange(PAGE_URL_CHANGED_PROPERTY, this.lastPage, url);
       this.lastPage = url;

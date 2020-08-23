@@ -47,6 +47,9 @@ public class HelpIndexView extends HelpAbstractOverviewView {
 
   private ImageIcon indexIcon;
 
+  /**
+   * Creates a new instance of HelpIndexView, a view representing indexitem entries as tree nodes.
+   */
   public HelpIndexView() {
     super(true);
     try {
@@ -57,6 +60,11 @@ public class HelpIndexView extends HelpAbstractOverviewView {
     }
   }
 
+  /**
+   * Creates the view based on the given XML document.
+   * 
+   * @param indexXMLDoc XML document.
+   */
   public void createView(final XMLDocument indexXMLDoc) {
     super.createView(indexXMLDoc, "indexitem");
     expandTreeNode((DefaultMutableTreeNode)getTree().getModel().getRoot());

@@ -16,4 +16,8 @@
       <label>Index</label>
       <data>exampleapphelpidx.xml</data>
    </view>
+   <view>
+      <name>Search</name>
+      <label>Search</label>
+   </view>
 </helpset>

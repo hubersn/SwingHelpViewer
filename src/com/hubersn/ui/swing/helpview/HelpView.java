@@ -33,6 +33,7 @@ For more information, please refer to <http://unlicense.org/>
 package com.hubersn.ui.swing.helpview;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
@@ -59,6 +60,8 @@ import javax.swing.event.TreeSelectionListener;
 public class HelpView extends JPanel {
 
   private static final long serialVersionUID = 1L;
+
+  private static final Color TEXT_HIGHLIGHT_COLOUR = new Color(235, 174, 52);
 
   private JSplitPane sp;
 
@@ -128,6 +131,27 @@ public class HelpView extends JPanel {
             }
           }
         });
+      } else if (view.getName().equals(HelpSearchView.VIEW_NAME)) {
+        final HelpSearchView helpSearchView = new HelpSearchView(helpSetToShow);
+        viewForTab = helpSearchView;
+        viewForTab.createView(null);
+        viewForTab.addSelectionListener(new TreeSelectionListener() {
+
+          @Override
+          public void valueChanged(TreeSelectionEvent e) {
+            if (e != null && e.getPath() != null) {
+              Object obj = e.getPath().getLastPathComponent();
+              if (obj instanceof HelpSearchView.SearchNode) {
+                HelpSearchView.SearchNode searchResult = (HelpSearchView.SearchNode)obj;
+                showTarget(helpSetToShow, searchResult.getTarget());
+                HelpView.this.contentView.clearHighlights();
+                for (int index : searchResult.getMatches()) {
+                  HelpView.this.contentView.addHighlight(index, searchResult.getLength(), TEXT_HIGHLIGHT_COLOUR);
+                }
+              }
+            }
+          }
+        });
       }
       if (viewForTab != null) {
         // check for icon - either icon for tab and text as tooltip, or text as tab text
@@ -185,7 +209,7 @@ public class HelpView extends JPanel {
       HelpView.this.contentView.setPage(hs.getMappedHelpURL(targetId));
       String lastRef = hs.getLastRef();
       HelpView.this.contentView.scrollToReference(lastRef);
-    } catch (Exception ex) {
+    } catch (final Exception ex) {
       // only log for now - won't happen on consistent helpsets
       System.err.println("Target failed: " + targetId);
       System.err.println("URL failed: " + hs.getMappedHelpURL(targetId));
