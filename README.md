@@ -46,7 +46,7 @@ A few months later, I experimented with search functionality for a project of on
 For my needs, the current state is "good enough".
 
 Some obvious improvements, whenever I find time and motivation:
-- add full-text search
+- add full-text search beyond the naive approach, i.e. index-based, multi-language, fuzzy, ranked
     - this collides with the "no external dependencies" idea, probably something like Apache Lucene will be used
     - probably best done as a plugin to support search-engine-of-choice
 - add more of JavaHelp's feature set
