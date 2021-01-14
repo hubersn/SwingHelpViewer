@@ -2,6 +2,10 @@
 A simple help viewer implemented in Java Swing
 
 ## Latest changes
+### 2021-01-14
+Context-sensitive "tracker based" help now available, with new "help cursor".
+Use ContextSensitiveHelpViewTools to supply help IDs and the viewer to your components and to register the "start the help tracker" action listener to the button of your choice. Similarities to CHS are completely unintended and accidential. Implementation is based on a GlassPane technique.
+
 ### 2020-08-23
 A naive full-text search has been added, .hs helpset definitions can now include a help view. See example data.
 
@@ -43,7 +47,7 @@ So I decided to reinvent the wheel. After all, this is IT and software developme
 A few months later, I experimented with search functionality for a project of one of my students (adding an Apache Lucene-based indexed search capability). What actually got added here is a naive full-text search without any fancy library.
 
 ## Future development
-For my needs, the current state is "good enough".
+For my needs, the current state is "good enough" (but I said the same before adding full-text search and tracker-based context sensitive help).
 
 Some obvious improvements, whenever I find time and motivation:
 - add full-text search beyond the naive approach, i.e. index-based, multi-language, fuzzy, ranked
@@ -51,7 +55,6 @@ Some obvious improvements, whenever I find time and motivation:
     - probably best done as a plugin to support search-engine-of-choice
 - add more of JavaHelp's feature set
     - bookmarks
-    - context-sensitive help, help pointer, help actions
     - merging HelpSets
     - help-in-a-browser (server-based)
 - add more help formats, e.g. Eclipse Help, CHM, HLP (OK, not entirely serious...)

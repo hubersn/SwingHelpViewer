@@ -34,6 +34,7 @@ package com.hubersn.ui.swing.helpview;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -58,6 +59,7 @@ import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Document;
 import javax.swing.text.Element;
 import javax.swing.text.Highlighter;
+import javax.swing.text.Highlighter.Highlight;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.html.HTML;
 import javax.swing.text.html.HTMLDocument;
@@ -109,6 +111,7 @@ public class HelpContentView extends JPanel {
           try {
             setPage(e.getURL());
           } catch (Exception ex) {
+            // Nothing we could possibly do, this comes from interpreting URLs from given HTML.
             ex.printStackTrace();
           }
         }
@@ -126,12 +129,12 @@ public class HelpContentView extends JPanel {
           HelpContentView.this.ignoreNextAdd = true;
           setPageInternal(nextPage);
         } catch (IOException ex) {
-          // TODO Auto-generated catch block
+          // Nothing we could possibly do, this comes from interpreting URLs from given HTML.
           ex.printStackTrace();
         }
       }
     };
-    this.nextPageAction.putValue(Action.LARGE_ICON_KEY, ResourceManager.getToolbarNextIcon());
+    ResourceManager.addIconToActionIfAvailable(this.nextPageAction, ResourceManager.getToolbarNextIcon());
 
     this.previousPageAction = new AbstractAction() {
 
@@ -144,12 +147,12 @@ public class HelpContentView extends JPanel {
           HelpContentView.this.ignoreNextAdd = true;
           setPageInternal(previousPage);
         } catch (IOException ex) {
-          // TODO Auto-generated catch block
+          // Nothing we could possibly do, this comes from interpreting URLs from given HTML.
           ex.printStackTrace();
         }
       }
     };
-    this.previousPageAction.putValue(Action.LARGE_ICON_KEY, ResourceManager.getToolbarPreviousIcon());
+    ResourceManager.addIconToActionIfAvailable(this.previousPageAction, ResourceManager.getToolbarPreviousIcon());
 
     enableNavigationActions();
   }
@@ -221,7 +224,7 @@ public class HelpContentView extends JPanel {
     try {
       return this.contentView.getText(0, this.contentView.getDocument().getLength());
     } catch (BadLocationException ex) {
-      // TODO Auto-generated catch block
+      // internal JEditorPane error, never seen...
       ex.printStackTrace();
     }
     return "";
@@ -247,7 +250,7 @@ public class HelpContentView extends JPanel {
     try {
       highlighter.addHighlight(startOffset, startOffset + length, painter);
     } catch (BadLocationException ex) {
-      // TODO Auto-generated catch block
+      // internal JEditorPane error, never seen...
       ex.printStackTrace();
     }
   }
@@ -291,6 +294,85 @@ public class HelpContentView extends JPanel {
           HelpContentView.this.contentView.scrollToReference(reference);
         }
       });
+    }
+  }
+
+  /**
+   * Scrolls the current content view to the first highlight (if it exists).
+   */
+  public void scrollToFirstHighlight() {
+    final JEditorPane ep = this.contentView;
+    if (ep.getHighlighter() != null) {
+      SwingUtilities.invokeLater(new Runnable() {
+        public void run() {
+          final Highlighter h =  ep.getHighlighter();
+          final Highlight[] highlights = h.getHighlights();
+          if (highlights != null && highlights.length > 0) {
+            final Highlight highlight = highlights[0];
+            try {
+              final Rectangle scrollPoint = ep.modelToView(highlight.getStartOffset());
+              ep.scrollRectToVisible(makeRectangleBigger(scrollPoint));
+            } catch (BadLocationException e) {
+              // will never happen, highlight position is always inside doc.
+              e.printStackTrace();
+            }
+          }
+        }
+      });
+    }
+  }
+
+  private static Rectangle makeRectangleBigger(final Rectangle sourceRect) {
+    final int OFFSET = 30;
+    sourceRect.y = Math.max(0, sourceRect.y - OFFSET);
+    sourceRect.height = sourceRect.height + 2 * OFFSET;
+    return sourceRect;
+  }
+
+  private static void dumpTags(HTMLDocument d, HTML.Tag tag) {
+    HTMLDocument.Iterator iterator = d.getIterator(tag);
+    System.out.println("Iterator for tag "+tag+" - null: "+(iterator == null));
+    if (iterator != null) {
+      System.out.println("  iterator valid: "+iterator.isValid());
+    }
+  }
+
+  private void detectTitle() {
+    Document doc = this.contentView.getDocument();
+    if (doc instanceof HTMLDocument) {
+      HTMLDocument hdoc = (HTMLDocument)doc;
+
+      System.out.println("Document Property:" + hdoc.getProperty(Document.TitleProperty));
+      // the following stuff did not work and I don't know why!
+      Element element = hdoc.getElement(hdoc.getDefaultRootElement(), StyleConstants.NameAttribute, HTML.Tag.TITLE);
+      if (element != null && element.getStartOffset() >= 0) {
+        try {
+          System.out.println("Element-based NameAttribute search: " + doc.getText(element.getStartOffset(), element.getEndOffset() - element.getStartOffset()));
+        } catch (BadLocationException ex) {
+          // TODO Auto-generated catch block
+          ex.printStackTrace();
+        }
+      } else {
+        System.out.println("Element with NameAttribute TITLE not found: "+element);
+      }
+      dumpTags(hdoc, HTML.Tag.HEAD);
+      dumpTags(hdoc, HTML.Tag.BODY);
+      dumpTags(hdoc, HTML.Tag.TITLE);
+      dumpTags(hdoc, HTML.Tag.H1);
+      HTMLDocument.Iterator iterator = hdoc.getIterator(HTML.Tag.TITLE);
+      if (iterator != null && iterator.isValid()) {
+        int startOffset = iterator.getStartOffset();
+        if (startOffset >= 0) {
+          try {
+            System.out.println("HTMLDocument.Iterator for tags TITLE: " + doc.getText(startOffset, iterator.getEndOffset() - startOffset));
+          } catch (BadLocationException ex) {
+            // TODO Auto-generated catch block
+            ex.printStackTrace();
+          }
+        }
+      } else {
+        System.out.println("No valid iterator for tag TITLE found: "+iterator);
+      }
     }
   }
 

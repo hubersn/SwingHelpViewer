@@ -60,7 +60,7 @@ public class HelpSet {
    * Creates a new helpset by loading the named helpset via the classloader.
    *
    * @param helpSetName name of helpset to load and parse.
-   * @throws on error, e.g. help set could not be found or parsed.
+   * @throws Exception on error, e.g. help set could not be found or parsed.
    */
   public HelpSet(final String helpSetName) throws Exception {
     this.views = new ArrayList<>();
@@ -120,6 +120,25 @@ public class HelpSet {
   }
 
   /**
+   * Returns the home ID defined in this HelpSet.
+   * 
+   * @return home ID.
+   */
+  public String getHomeID() {
+    return this.homeID;
+  }
+
+  /**
+   * Returns if the given helpId is defined in our HelpMap for this HelpSet.
+   * 
+   * @param helpId helpId to check.
+   * @return helpId valid?
+   */
+  public boolean isValidId(final String helpId) {
+    return this.helpMap.getURL(helpId) != null;
+  }
+
+  /**
    * Returns the last reference that was asked for via getHelpURL.
    * 
    * @return last reference asked for via getHelpURL.
@@ -158,28 +177,59 @@ public class HelpSet {
     return returnURL;
   }
 
+  /**
+   * Returns the URL mapped to the given help ID.
+   * 
+   * @param id help ID.
+   * @return mapped URL for help ID.
+   */
   public URL getMappedHelpURL(final String id) {
     return getHelpURL(this.helpMap.getURL(id));
   }
 
+  /**
+   * Returns the URL mapped to the given help ID as plain string.
+   * 
+   * @param id help ID.
+   * @return mapped URL for help ID as plain string.
+   */
   public String getMappedHelpURLString(final String id) {
     return this.helpMap.getURL(id);
   }
 
-  public InputStream getHelpInputStream(final String name) {
-    return HelpSet.class.getResourceAsStream(this.rootPath + "/" + name);
+  /**
+   * Returns an input stream for a resource via the Classloader of this class.
+   * 
+   * @param resourceName name of the resource for the input stream.
+   * @return input stream for given resource.
+   */
+  public InputStream getHelpInputStream(final String resourceName) {
+    return HelpSet.class.getResourceAsStream(this.rootPath + "/" + resourceName);
   }
 
+  /**
+   * Returns the help mapper used for this help set.
+   * 
+   * @return help mapper.
+   */
   public HelpMapper getHelpMapper() {
     return this.helpMap;
   }
 
+  /**
+   * Simple data class to encapsulate a help view's config created from an XML definition in .hs resource.
+   */
   public static class ViewConfig {
 
     private String name;
     private String label;
     private String data;
 
+    /**
+     * Creates a new instance of ViewConfig based on the XML tags of a view tag from a .hs file.
+     * 
+     * @param viewTags tag list for this view.
+     */
     public ViewConfig(final List<XMLDocument.XMLTag> viewTags) {
       for (final XMLDocument.XMLTag innerTag : viewTags) {
         if ("name".equals(innerTag.tag)) {
@@ -194,14 +244,29 @@ public class HelpSet {
       }
     }
 
+    /**
+     * Returns the name of this view.
+     * 
+     * @return name of this view.
+     */
     public String getName() {
       return this.name;
     }
 
+    /**
+     * Returns the label (e.g. for UI text or tooltip) for this view.
+     * 
+     * @return label for this view.
+     */
     public String getLabel() {
       return this.label;
     }
 
+    /**
+     * Returns the data for this view, e.g. the name of a resource.
+     * 
+     * @return data for this view.
+     */
     public String getData() {
       return this.data;
     }

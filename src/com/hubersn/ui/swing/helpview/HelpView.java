@@ -43,7 +43,6 @@ import java.net.URL;
 import java.util.List;
 
 import javax.swing.AbstractAction;
-import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -73,6 +72,8 @@ public class HelpView extends JPanel {
 
   private JToolBar toolbar;
 
+  private final HelpSet helpSetToShow;
+
   /**
    * Creates a new instance of the HelpView panel.
    *
@@ -81,6 +82,7 @@ public class HelpView extends JPanel {
    */
   public HelpView(final HelpSet helpSetToShow) throws Exception {
     super(new BorderLayout());
+    this.helpSetToShow = helpSetToShow;
     this.tabbedPane = new JTabbedPane(SwingConstants.TOP);
     this.tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
     this.contentView = new HelpContentView();
@@ -99,7 +101,7 @@ public class HelpView extends JPanel {
               Object obj = e.getPath().getLastPathComponent();
               if (obj instanceof HelpAbstractOverviewView.HelpOverviewNode) {
                 HelpAbstractOverviewView.HelpOverviewNode selectedNode = (HelpAbstractOverviewView.HelpOverviewNode) obj;
-                showTarget(helpSetToShow, selectedNode.getTarget());
+                showTarget(selectedNode.getTarget());
               }
             }
           }
@@ -126,7 +128,7 @@ public class HelpView extends JPanel {
               Object obj = e.getPath().getLastPathComponent();
               if (obj instanceof HelpAbstractOverviewView.HelpOverviewNode) {
                 HelpAbstractOverviewView.HelpOverviewNode selectedNode = (HelpAbstractOverviewView.HelpOverviewNode) obj;
-                showTarget(helpSetToShow, selectedNode.getTarget());
+                showTarget(selectedNode.getTarget());
               }
             }
           }
@@ -143,11 +145,12 @@ public class HelpView extends JPanel {
               Object obj = e.getPath().getLastPathComponent();
               if (obj instanceof HelpSearchView.SearchNode) {
                 HelpSearchView.SearchNode searchResult = (HelpSearchView.SearchNode)obj;
-                showTarget(helpSetToShow, searchResult.getTarget());
+                showTarget(searchResult.getTarget());
                 HelpView.this.contentView.clearHighlights();
                 for (int index : searchResult.getMatches()) {
                   HelpView.this.contentView.addHighlight(index, searchResult.getLength(), TEXT_HIGHLIGHT_COLOUR);
                 }
+                HelpView.this.contentView.scrollToFirstHighlight();
               }
             }
           }
@@ -178,7 +181,7 @@ public class HelpView extends JPanel {
         }
       }
     };
-    this.homePageAction.putValue(Action.LARGE_ICON_KEY, ResourceManager.getToolbarHomeIcon());
+    ResourceManager.addIconToActionIfAvailable(this.homePageAction, ResourceManager.getToolbarHomeIcon());
 
     this.contentView.setPage(helpSetToShow.getHelpHomeURL());
     this.tabbedPane.setMinimumSize(new Dimension(200,200));
@@ -188,6 +191,11 @@ public class HelpView extends JPanel {
     add(this.sp, BorderLayout.CENTER);
   }
 
+  /**
+   * Returns a toolbar, currently consisting of previous/next/home buttons.
+   * 
+   * @return toolbar.
+   */
   public JToolBar getToolBar() {
     if (this.toolbar == null) {
       this.toolbar = new JToolBar();
@@ -200,19 +208,28 @@ public class HelpView extends JPanel {
   }
 
   private static void postprocessToolbarButton(final JButton btn) {
-    btn.setDefaultCapable(false);;
+    btn.setDefaultCapable(false);
     btn.setFocusable(false);
   }
 
-  private void showTarget(final HelpSet hs, final String targetId) {
+  /**
+   * Shows the targetId in this help view from the associated HelpSet.
+   * 
+   * @param targetId target Help ID to show.
+   */
+  public void showTarget(final String targetId) {
     try {
-      HelpView.this.contentView.setPage(hs.getMappedHelpURL(targetId));
-      String lastRef = hs.getLastRef();
+      if (targetId == null) {
+        this.contentView.setPage(this.helpSetToShow.getHelpHomeURL());
+        return;
+      }
+      HelpView.this.contentView.setPage(this.helpSetToShow.getMappedHelpURL(targetId));
+      String lastRef = this.helpSetToShow.getLastRef();
       HelpView.this.contentView.scrollToReference(lastRef);
     } catch (final Exception ex) {
       // only log for now - won't happen on consistent helpsets
       System.err.println("Target failed: " + targetId);
-      System.err.println("URL failed: " + hs.getMappedHelpURL(targetId));
+      System.err.println("URL failed: " + this.helpSetToShow.getMappedHelpURL(targetId));
       ex.printStackTrace();
     }
   }

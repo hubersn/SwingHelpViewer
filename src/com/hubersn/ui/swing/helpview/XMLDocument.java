@@ -56,11 +56,11 @@ public class XMLDocument {
   /** Character to use for separating XML path elements. */
   public static final String XML_PATH_SEPARATOR = ":";
 
-  private Document xmlDoc;
+  private final Document xmlDoc;
 
-  private Element xmlRoot;
+  private final Element xmlRoot;
 
-  private List<XMLTag> xmlTags = new ArrayList<>();
+  private final List<XMLTag> xmlTags = new ArrayList<>();
 
   /**
    * Creates a new XML document representation based on given source stream.
@@ -77,6 +77,8 @@ public class XMLDocument {
     factory.setFeature("http://xml.org/sax/features/validation", false);
     factory.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
     factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+    // explicitly enable doctype declaration, needed for JavaHelp XML
+    factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false);
 
     final DocumentBuilder builder = factory.newDocumentBuilder();
 
@@ -87,36 +89,36 @@ public class XMLDocument {
   }
 
   private void populate() {
-    NodeList children = this.xmlRoot.getChildNodes();
+    final NodeList children = this.xmlRoot.getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
-      Node child = children.item(i);
+      final Node child = children.item(i);
       if (child instanceof Element) {
         add((Element) child, this.xmlTags);
       }
     }
   }
 
-  private static void add(Element child, List<XMLTag> tags) {
-    XMLTag tag = getTag(child);
+  private static void add(final Element child, final List<XMLTag> tags) {
+    final XMLTag tag = getTag(child);
     if (tags != null) {
       tags.add(tag);
     }
     // children
-    NodeList children = child.getChildNodes();
+    final NodeList children = child.getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
-      Node node = children.item(i);
+      final Node node = children.item(i);
       if (node instanceof Element) {
         add((Element) node, tag.children);
       }
     }
   }
 
-  private static XMLTag getTag(Element source) {
-    XMLTag tag = new XMLTag(source.getTagName(), getNodeTextContent(source));
+  private static XMLTag getTag(final Element source) {
+    final XMLTag tag = new XMLTag(source.getTagName(), getNodeTextContent(source));
     // attributes
-    NamedNodeMap nnm = source.getAttributes();
+    final NamedNodeMap nnm = source.getAttributes();
     for (int i = 0; i < nnm.getLength(); i++) {
-      Node node = nnm.item(i);
+      final Node node = nnm.item(i);
       if (node instanceof Attr) {
         tag.attributes.add(new XMLAttribute((Attr) node));
       }
@@ -124,13 +126,15 @@ public class XMLDocument {
     return tag;
   }
 
-  private static String getNodeTextContent(Node node) {
+  private static String getNodeTextContent(final Node node) {
     final StringBuilder result = new StringBuilder();
-    if (!node.hasChildNodes()) return "";
+    if (!node.hasChildNodes()) {
+      return "";
+    }
 
-    NodeList list = node.getChildNodes();
+    final NodeList list = node.getChildNodes();
     for (int i = 0; i < list.getLength(); i++) {
-      Node subnode = list.item(i);
+      final Node subnode = list.item(i);
       if (subnode.getNodeType() == Node.TEXT_NODE) {
         result.append(subnode.getNodeValue());
       } else if (subnode.getNodeType() == Node.CDATA_SECTION_NODE) {
@@ -175,7 +179,7 @@ public class XMLDocument {
    * @return attribute's value of tag for given path, empty string if not found.
    */
   public String getTagAttribute(final String path, final String attributeName) {
-    XMLTag tag = getTag(path);
+    final XMLTag tag = getTag(path);
     if (tag != null) {
       return tag.getAttribute(attributeName);
     }
@@ -183,7 +187,7 @@ public class XMLDocument {
   }
 
   private String getTagValue(final String[] path) {
-    XMLTag tag = getTag(path, 0, this.xmlTags);
+    final XMLTag tag = getTag(path, 0, this.xmlTags);
     if (tag != null) {
       return tag.text;
     }
@@ -194,13 +198,19 @@ public class XMLDocument {
     if (pathIndex >= path.length) {
       return null;
     }
-    List<XMLTag> allTags = getTags(path, pathIndex, listToRecurse);
+    final List<XMLTag> allTags = getTags(path, pathIndex, listToRecurse);
     if (!allTags.isEmpty()) {
       return allTags.get(0);
     }
     return null;
   }
 
+  /**
+   * Returns all tags for the given path (tag names separated by XML_PATH_SEPARATOR).
+   * 
+   * @param path path.
+   * @return all tags for path.
+   */
   public List<XMLTag> getTags(final String path) {
     return getTags(p(path), 0, this.xmlTags);
   }
@@ -209,10 +219,10 @@ public class XMLDocument {
     if (pathIndex >= path.length) {
       return Collections.emptyList();
     }
-    String pathElement = path[pathIndex];
+    final String pathElement = path[pathIndex];
     final boolean lastElement = path.length == pathIndex + 1;
     // check if element exists
-    List<XMLTag> returnTags = new ArrayList<>();
+    final List<XMLTag> returnTags = new ArrayList<>();
     for (final XMLTag tag : listToRecurse) {
       if (tag.tag.equals(pathElement)) {
         if (lastElement) {
@@ -234,19 +244,33 @@ public class XMLDocument {
    * Thin wrapper object for attributes of an XML tag.
    */
   public static class XMLAttribute {
+    /** Name of this attribute. */
     public final String name;
+    /** Value of this attribute. */
     public final String value;
 
+    /**
+     * Creates a new instance of XMLAttribute with given name/value.
+     * 
+     * @param name name.
+     * @param value value.
+     */
     public XMLAttribute(final String name, final String value) {
       this.name = name;
       this.value = value;
     }
 
-    public XMLAttribute(Attr attr) {
+    /**
+     * Creates a new instance of XMLAttribute based on givven attr.
+     * 
+     * @param attr attr.
+     */
+    public XMLAttribute(final Attr attr) {
       this.name = attr.getName();
       this.value = attr.getValue();
     }
 
+    @Override
     public String toString() {
       return "XMLAttribute[" + this.name + "/" + this.value + "]";
     }
@@ -256,16 +280,32 @@ public class XMLDocument {
    * Thin wrapper object for an XML tag.
    */
   public static class XMLTag {
+    /** Tag name. */
     public final String tag;
+    /** Tag's text. */
     public final String text;
+    /** Children of this tag. */
     public final List<XMLTag> children = new ArrayList<>();
+    /** Atrributes of this tag. */
     public final List<XMLAttribute> attributes = new ArrayList<>();
 
+    /**
+     * Creates a new instance of XMLTag with the given name and text.
+     * 
+     * @param tag tag name.
+     * @param text tag text.
+     */
     public XMLTag(final String tag, final String text) {
       this.tag = tag;
       this.text = text;
     }
 
+    /**
+     * Returns the value of the named attribute.
+     * 
+     * @param name attribute's name.
+     * @return value for given attribute.
+     */
     public String getAttribute(final String name) {
       for (final XMLAttribute attribute : this.attributes) {
         if (name.equals(attribute.name)) {
@@ -275,15 +315,22 @@ public class XMLDocument {
       return "";
     }
 
-    public XMLTag getChild(final String tag) {
+    /**
+     * Returns the child tag with the given name.
+     * 
+     * @param childTagName child tag's name.
+     * @return child tag.
+     */
+    public XMLTag getChild(final String childTagName) {
       for (final XMLTag xmlTag : this.children) {
-        if (tag.equals(xmlTag.tag)) {
+        if (childTagName.equals(xmlTag.tag)) {
           return xmlTag;
         }
       }
       return null;
     }
 
+    @Override
     public String toString() {
       return "XMLTag[" + this.tag + "/" + this.text + "/" + this.attributes + "/childcount="+this.children.size()+"]";
     }

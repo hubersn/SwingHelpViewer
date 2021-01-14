@@ -48,6 +48,10 @@ public class HelpViewer {
 
   private final JPanel mainPanel = new JPanel(new BorderLayout());
 
+  private final HelpView helpView;
+
+  private final HelpSet helpSet;
+
   /**
    * Creates a new instance of HelpViewer.
    *
@@ -56,14 +60,23 @@ public class HelpViewer {
    */
   public HelpViewer(final String helpSetName) throws Exception {
     // load and parse helpset - will throw an Exception if anything goes wrong
-    final HelpSet hs = new HelpSet(helpSetName);
-    this.helpViewerFrame = new JFrame(hs.getFrameTitle());
-    final HelpView helpView = new HelpView(hs);
-    this.mainPanel.add(helpView.getToolBar(), BorderLayout.NORTH);
-    this.mainPanel.add(helpView, BorderLayout.CENTER);
+    this.helpSet = new HelpSet(helpSetName);
+    this.helpViewerFrame = new JFrame(this.helpSet.getFrameTitle());
+    this.helpView = new HelpView(this.helpSet);
+    this.mainPanel.add(this.helpView.getToolBar(), BorderLayout.NORTH);
+    this.mainPanel.add(this.helpView, BorderLayout.CENTER);
     this.helpViewerFrame.setContentPane(this.mainPanel);
     this.helpViewerFrame.pack();
     this.helpViewerFrame.setSize(1024, 768);
+  }
+
+  /**
+   * Returns the underlying helpset.
+   * 
+   * @return helpset.
+   */
+  public HelpSet getHelpSet() {
+    return this.helpSet;
   }
 
   /**
@@ -77,6 +90,16 @@ public class HelpViewer {
 
   private void setVisible(final boolean visible) {
     this.helpViewerFrame.setVisible(visible);
+  }
+
+  /**
+   * Opens this help viewer frame and shows the help ID - null shows the "Home" help page.
+   * 
+   * @param helpId helpId to show, null to show "Home" help page.
+   */
+  public void showHelp(final String helpId) {
+    setVisible(true);
+    this.helpView.showTarget(helpId);
   }
 
   /**

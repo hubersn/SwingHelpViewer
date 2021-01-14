@@ -32,10 +32,12 @@ For more information, please refer to <http://unlicense.org/>
 
 package com.hubersn.ui.swing.helpview;
 
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import javax.swing.Action;
 import javax.swing.ImageIcon;
 
 /**
@@ -45,17 +47,26 @@ import javax.swing.ImageIcon;
  */
 public class ResourceManager {
 
+  /** Key for resource "toc icon for tab". */
   public static final String TAB_TOC_ICON = "TAB_TOC_ICON_KEY";
 
+  /** Key for resource "index icon for tab". */
   public static final String TAB_INDEX_ICON = "TAB_INDEX_ICON_KEY";
 
+  /** Key for resource "search icon for tab". */
   public static final String TAB_SEARCH_ICON = "TAB_SEARCH_ICON_KEY";
 
+  /** Key for resource "previous action icon for toolbar". */
   public static final String TOOLBAR_PREVIOUS_ICON = "TOOLBAR_PREVIOUS_ICON_KEY";
 
+  /** Key for resource "next action icon for toolbar". */
   public static final String TOOLBAR_NEXT_ICON = "TOOLBAR_NEXT_ICON_KEY";
 
+  /** Key for resource "home action icon for toolbar". */
   public static final String TOOLBAR_HOME_ICON = "TOOLBAR_HOME_ICON_KEY";
+
+  /** Key for resource "cursor image for tracking help". */
+  public static final String TRACKING_HELP_CURSOR = "TRACKING_HELP_CURSOR_KEY";
 
   private static Map<String, ImageIcon> iconResourceMap = new HashMap<>();
 
@@ -183,9 +194,38 @@ public class ResourceManager {
     return iconResourceMap.get(TOOLBAR_HOME_ICON);
   }
 
+  /**
+   * Returns the icon to use for the "Tracking Help" cursor.
+   *
+   * @return "Tracking Help" cursor.
+   */
+  public static ImageIcon getTrackingHelpCursor() {
+    checkAndLoadIcon(TRACKING_HELP_CURSOR, "helpcursor.png");
+    return iconResourceMap.get(TRACKING_HELP_CURSOR);
+  }
+
+  /**
+   * Adds the given icon to the given action as property LARGE_ICON.
+   * 
+   * @param action target of icon.
+   * @param icon icon to use.
+   */
+  public static void addIconToActionIfAvailable(final Action action, final ImageIcon icon) {
+    if (icon != null) {
+      action.putValue(Action.LARGE_ICON_KEY, icon);
+    }
+  }
+
   private static synchronized void checkAndLoadIcon(final String iconKey, final String iconFilename) {
     if (!iconResourceMap.containsKey(iconKey)) {
-      iconResourceMap.put(iconKey, new ImageIcon(HelpTOCView.class.getResource("resources/" + iconFilename)));
+      try {
+        final URL iconResource = ResourceManager.class.getResource("resources/" + iconFilename);
+        if (iconResource != null) {
+          iconResourceMap.put(iconKey, new ImageIcon(iconResource));
+        }
+      } catch (final Exception ex) {
+        // silence is golden - icons are not essential
+      }
     }
   }
 }

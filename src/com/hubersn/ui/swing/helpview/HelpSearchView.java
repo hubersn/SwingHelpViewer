@@ -32,6 +32,9 @@ For more information, please refer to <http://unlicense.org/>
 
 package com.hubersn.ui.swing.helpview;
 
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Window;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,6 +44,10 @@ import java.util.Map;
 import java.util.Objects;
 
 import javax.swing.ImageIcon;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JWindow;
+import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
@@ -69,7 +76,7 @@ public class HelpSearchView extends HelpAbstractOverviewView {
     this.helpSet = helpSet;
     try {
       this.searchIcon = ResourceManager.getTabSearchIcon();
-    } catch (Exception ex) {
+    } catch (final Exception ex) {
       // no icon - no problem.
       this.searchIcon = null;
     }
@@ -91,55 +98,93 @@ public class HelpSearchView extends HelpAbstractOverviewView {
 
   @Override
   public void doSearch(final String searchText) {
-    clear();
-    if (searchText == null || "".equals(searchText)) {
-      return;
-    }
-    // Search through all mapped docs
-    HelpMapper helpMapper = this.helpSet.getHelpMapper();
-    final String[] targets = helpMapper.getTargets();
-    // first, collect all URLs - there might be different targets that point to the same URL
-    final Map<URL, String> urls = new HashMap<>();
-    for (final String target : targets) {
-      urls.put(this.helpSet.getMappedHelpURL(target), target);
-    }
-    final List<SearchNode> searchResults = new ArrayList<>();
-    for (final URL url : urls.keySet()) {
-      try {
-        HelpContentView pane = new HelpContentView();
-        pane.setPage(url);
-        String toSearch = pane.getPlainText().toLowerCase();
-        List<Integer> matches = new ArrayList<>();
-        String realSearchText = searchText.toLowerCase();
-        int index = toSearch.indexOf(realSearchText);
-        while (index >= 0) {
-          matches.add(index);
-          index = toSearch.indexOf(realSearchText, index + 1);
-        }
-        if (!matches.isEmpty()) {
-          String title = pane.getTitle();
-          if (title == null) {
-            title = searchText;
+    setWaitCursorForParentWindow();
+    try {
+      clear();
+      if (searchText == null || "".equals(searchText)) {
+        return;
+      }
+      // Search through all mapped docs
+      final HelpMapper helpMapper = this.helpSet.getHelpMapper();
+      final String[] targets = helpMapper.getTargets();
+      // first, collect all URLs - there might be different targets that point to the same URL
+      final Map<URL, String> urls = new HashMap<>();
+      for (final String target : targets) {
+        urls.put(this.helpSet.getMappedHelpURL(target), target);
+      }
+      final List<SearchNode> searchResults = new ArrayList<>();
+      for (final URL url : urls.keySet()) {
+        try {
+          final HelpContentView pane = new HelpContentView();
+          pane.setPage(url);
+          final String toSearch = pane.getPlainText().toLowerCase();
+          final List<Integer> matches = new ArrayList<>();
+          final String realSearchText = searchText.toLowerCase();
+          int index = toSearch.indexOf(realSearchText);
+          while (index >= 0) {
+            matches.add(index);
+            index = toSearch.indexOf(realSearchText, index + 1);
           }
-          SearchNode result = new SearchNode(urls.get(url), title, matches, realSearchText.length());
-          searchResults.add(result);
+          if (!matches.isEmpty()) {
+            String title = pane.getTitle();
+            if (title == null) {
+              title = searchText;
+            }
+            final SearchNode result = new SearchNode(urls.get(url), title, matches, realSearchText.length());
+            searchResults.add(result);
+          }
+        } catch (final Exception ex) {
+          // can this ever happen?
+          ex.printStackTrace();
         }
-      } catch (Exception ex) {
-        // TODO Auto-generated catch block
-        ex.printStackTrace();
+      }
+      final DefaultMutableTreeNode root = (DefaultMutableTreeNode)getTree().getModel().getRoot();
+      if (!searchResults.isEmpty()) {
+        Collections.sort(searchResults);
+        Collections.reverse(searchResults);
+        for (final SearchNode searchResult : searchResults) {
+          ((DefaultTreeModel)getTree().getModel()).insertNodeInto(searchResult, root, root.getChildCount());
+        }
+      } else {
+        ((DefaultTreeModel)getTree().getModel()).insertNodeInto(new SearchNode(null, "no matches", new ArrayList<Integer>(), 0), root, root.getChildCount());
+      }
+      expandTreeNode(root);
+      // select first result if there are real results
+      if (!searchResults.isEmpty()) {
+        getTree().setSelectionRow(0);
+      }
+    } finally {
+      setStandardCursorForParentWindow();
+    }
+  }
+
+  private void setWaitCursorForParentWindow() {
+    setCursorForWindowParent(this, true);
+  }
+
+  private void setStandardCursorForParentWindow() {
+    setCursorForWindowParent(this, false);
+  }
+
+  private static void setCursorForWindowParent(final Component c, final boolean waitCursor) {
+    final Window w = SwingUtilities.getWindowAncestor(c);
+    Component glassPane = null;
+    if (w instanceof JDialog) {
+      glassPane = ((JDialog)w).getGlassPane();
+    } else if (w instanceof JFrame) {
+      glassPane = ((JFrame)w).getGlassPane();
+    } else if (w instanceof JWindow) {
+      glassPane = ((JWindow)w).getGlassPane();
+    }
+    if (glassPane != null) {
+      if (waitCursor) {
+        glassPane.setVisible(true);
+        glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+      } else {
+        glassPane.setCursor(Cursor.getDefaultCursor());
+        glassPane.setVisible(false);
       }
     }
-    DefaultMutableTreeNode root = (DefaultMutableTreeNode)getTree().getModel().getRoot();
-    if (!searchResults.isEmpty()) {
-      Collections.sort(searchResults);
-      Collections.reverse(searchResults);
-      for (final SearchNode searchResult : searchResults) {
-        ((DefaultTreeModel)getTree().getModel()).insertNodeInto(searchResult, root, root.getChildCount());
-      }
-    } else {
-      ((DefaultTreeModel)getTree().getModel()).insertNodeInto(new SearchNode(null, "no matches", new ArrayList<Integer>(), 0), root, root.getChildCount());
-    }
-    expandTreeNode(root);
   }
 
   /**
